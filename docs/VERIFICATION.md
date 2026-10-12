@@ -4,6 +4,18 @@ Verified on Windows on 2026-10-11. These results describe this workspace, not a 
 
 ## Automated checks
 
+### Simplify arrangement verification
+
+- The arrangement regressions cover all four presets, independent hand settings, immutable sources and snapshots, melody below upper accompaniment, octave doubling, arpeggios, dense chords, weak ornamental runs, repeated accents, melody changing hands, protected notes, and explicit roles. Important sustained bass changes inside a single measure survive accompaniment reduction.
+- Timing checks cover retained melody attacks/releases, pickups, imported tempo changes, MusicXML schema and measure-duration validation, source-linked fragments, MIDI event round-trips, and trailing silence. Physical-demand checks use overlapping key-down intervals and separately report melody exceptions.
+- Persistence tests cover the additive version 3 schema, outdated arrangements, shared guidance, regeneration into new versions, selected exports, invalid settings/IDs, generation failures, source-change races, and deletion races. Bounded melody/harmony analysis is exercised on 10,000 notes.
+- Frontend checks cover A/B switching while playing or paused, held notes, loop boundaries, speed/position continuity, external-to-synth comparison, and arrangement pedal events. The browser workflow covers generation, restored selection/settings, guidance/protection, explicit refresh, unchanged prior versions, score-note mappings, selected export links, and the mobile panel. Existing practice, offline, library, transcription, hand-correction, and YouTube tests remain included.
+- Production build, all 96 backend tests, and 15 frontend unit tests pass. All nine browser tests pass, including the new arrangement workflow. Desktop and mobile screenshots were inspected; the score and keyboard now size to the available space above transport controls.
+
+On the original Windowlight study, all 96 composed melody notes survive, including its accented octave-register change. Beginner reduces 64 accompaniment notes to 17; Easy retains additional source accents. These are controlled structural checks, not a human listening evaluation or a general accuracy claim. Competing melodic voices, uncertain harmony, ornament-versus-theme decisions, hand crossings, expressive overlap/pedaling, and retained wide jumps still need musical review. The UI reports these judgments and explains transformations; retained melody timing is unchanged and general rhythmic simplification remains deferred.
+
+### Existing transcription checks
+
 - Production TypeScript/Vite build passes.
 - Backend: 79 tests cover expressive time/beat mapping, tempo changes, downbeat alignment, pickups/ties, immutable raw notes, MIDI chords/repeated notes/sustain round-trips, official MusicXML 4.0 XSD validation, persistence, input rejection, job retry/cancel APIs, and a real subprocess model-installation failure. Regressions also cover cleanup continuation merging, model-specific cleanup, event normalization, clip boundaries, pedal union, saved-audio snapshots, deletion races, re-transcription settings/offsets, and contextual hand assignment with manual overrides and consistent score/export staff placement.
 - Frontend: 12 tests cover keyboard geometry, active-note boundaries, time-map inverses, loop overshoot, voice flushing/reconstruction, repeated pitches, hand muting, speed continuity, a buffered external clock without synthesized voices, and network versus HTTP error messages. Hand muting includes separate middle-C notes assigned to different hands in different phrases.

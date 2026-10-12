@@ -52,6 +52,8 @@ def delete_piece(piece_id):
         if not conn.execute('SELECT 1 FROM pieces WHERE id=?', (piece_id,)).fetchone():
             raise LookupError('Piece not found')
         conn.execute('DELETE FROM revisions WHERE piece_id=?', (piece_id,))
+        conn.execute('DELETE FROM arrangements WHERE piece_id=?', (piece_id,))
+        conn.execute('DELETE FROM arrangement_sources WHERE piece_id=?', (piece_id,))
         # Keep shared acquisition sources and job history usable by other pieces.
         conn.execute('UPDATE jobs SET piece_id=NULL WHERE piece_id=?', (piece_id,))
         conn.execute('DELETE FROM pieces WHERE id=?', (piece_id,))

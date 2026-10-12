@@ -1,10 +1,10 @@
 import {useEffect,useRef} from 'react'
-import type { Piece, Note } from './types'
+import type { PerformanceView, Note } from './types'
 import {HAND_COLORS} from './types'
-import {keyboardGeometry,noteName} from './timing'
+import {keyboardGeometry,noteName,secondsToBeats,beatsToSeconds} from './timing'
 import type { Playback } from './playback'
 
-export function PianoRoll({piece,player,range,labels,octaves,zoom,onSelect}:{piece:Piece;player:Playback;range:[number,number];labels:boolean;octaves:boolean;zoom:number;onSelect:(n:Note)=>void}){
+export function PianoRoll({piece,player,range,labels,octaves,zoom,onSelect}:{piece:PerformanceView;player:Playback;range:[number,number];labels:boolean;octaves:boolean;zoom:number;onSelect:(n:Note)=>void}){
  const canvas=useRef<HTMLCanvasElement>(null),outer=useRef<HTMLDivElement>(null)
  const hitNotes=useRef<{x:number;y:number;w:number;h:number;note:Note}[]>([])
  useEffect(()=>{
@@ -17,8 +17,7 @@ export function PianoRoll({piece,player,range,labels,octaves,zoom,onSelect}:{pie
    const keyHeight=Math.min(98,Math.max(60,height*.26)),strike=height-keyHeight,pixelsPerSecond=Math.max(42,strike/4.5),time=player.time()
    const keys=keyboardGeometry(range[0],range[1],width),keyMap=new Map(keys.map(k=>[k.pitch,k]))
    for(const key of keys)if(!key.black){ctx.fillStyle=key.pitch%12===0?'#192c32':'#14252b';ctx.fillRect(key.x,0,key.width-.5,strike);ctx.strokeStyle='#24373c';ctx.beginPath();ctx.moveTo(key.x,0);ctx.lineTo(key.x,strike);ctx.stroke()}
-   const beatSeconds=60/piece.settings.tempo
-   for(let beat=Math.floor(time/beatSeconds);beat*beatSeconds<time+strike/pixelsPerSecond;beat++){const y=strike-(beat*beatSeconds-time)*pixelsPerSecond;ctx.strokeStyle=beat%piece.settings.numerator===0?'#385056':'#24373c';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke()}
+   for(let beat=Math.floor(secondsToBeats(time,piece.score.anchors));beatsToSeconds(beat,piece.score.anchors)<time+strike/pixelsPerSecond;beat++){const y=strike-(beatsToSeconds(beat,piece.score.anchors)-time)*pixelsPerSecond;ctx.strokeStyle=beat%piece.settings.numerator===0?'#385056':'#24373c';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke()}
    const active=new Map<number,string>();hitNotes.current=[]
    for(const n of piece.notes){
     const pitch=n.pitch+(player.mode==='synth'?player.transpose:0),key=keyMap.get(pitch);if(!key)continue

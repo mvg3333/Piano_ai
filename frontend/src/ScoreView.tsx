@@ -1,10 +1,10 @@
 import {useEffect,useRef,useState} from 'react'
 import {OpenSheetMusicDisplay, VexFlowGraphicalNote, TransposeCalculator} from 'opensheetmusicdisplay'
-import type {Piece} from './types'
+import type {PerformanceView} from './types'
 import type {Playback} from './playback'
 import {secondsToBeats} from './timing'
 
-export function ScoreView({piece,player,size,transpose,onSeek}:{piece:Piece;player:Playback;size:number;transpose:number;onSeek:(t:number)=>void}){
+export function ScoreView({piece,player,size,transpose,onSeek}:{piece:PerformanceView;player:Playback;size:number;transpose:number;onSeek:(t:number)=>void}){
  const host=useRef<HTMLDivElement>(null),scroll=useRef<HTMLDivElement>(null),osmd=useRef<OpenSheetMusicDisplay|null>(null)
  const positions=useRef<{beat:number;measure:number;x:number;y:number;w:number;h:number}[]>([])
  const renderedNotes=useRef<{ids:string[];elements:HTMLElement[]}[]>([])

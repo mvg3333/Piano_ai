@@ -38,3 +38,26 @@ it('follows assigned hands when middle C belongs to different hands in separate 
  p.pause()
 })
 it('follows a buffered external clock without synthetic voices',async()=>{const {p,context}=engine();let current=2;const pause=vi.fn();p.configureMode('audio',{currentTime:()=>current,play:vi.fn(),pause,seek:t=>{current=t},rate:vi.fn(),isPlaying:()=>false});await p.play();current=2;context.currentTime=20;p.tick();expect(p.time()).toBe(2);expect(p.voices.size).toBe(0);p.configureMode('synth');expect(pause).toHaveBeenCalled();expect(p.playing).toBe(false)})
+it('switches arrangements at the same position, speed and loop without count-in or old voices',async()=>{
+ const {p,context}=engine();await p.play();context.currentTime=.5;p.rate(.75)
+ p.loop=true;p.loopA=.2;p.loopB=3;p.countIn=true;p.transpose=2;p.hands='right'
+ const source=p.piece!,arranged={...source,notes:source.notes.filter(n=>n.id==='a')}
+ p.replacePerformance(arranged)
+ expect(p.time()).toBe(.5);expect(p.speed).toBe(.75);expect(p.playing).toBe(true)
+ expect(p.countEnd).toBe(0);expect(p.transpose).toBe(2);expect(p.hands).toBe('right')
+ expect([p.loopA,p.loopB,p.loop]).toEqual([.2,3,true]);expect([...p.voices.keys()]).toEqual(['a'])
+ p.replacePerformance(source);expect(p.time()).toBe(.5);expect(stop).toHaveBeenCalled()
+ p.pause();p.seek(2.99);p.replacePerformance(arranged);expect(p.playing).toBe(false);expect(p.time()).toBe(2.99)
+})
+it('comparison switches an external clock to synthesized piano without changing source position or speed',async()=>{
+ const {p}=engine();let current=0;const pause=vi.fn()
+ p.offset=12;p.configureMode('audio',{currentTime:()=>current,play:vi.fn(),pause,seek:t=>{current=t},rate:vi.fn(),isPlaying:()=>true})
+ await p.play();current=13.5;p.rate(.5)
+ p.replacePerformance(p.piece!,true)
+ expect(p.mode).toBe('synth');expect(p.time()).toBe(1.5);expect(p.speed).toBe(.5);expect(pause).toHaveBeenCalled()
+ expect(p.playing).toBe(true);p.pause()
+})
+it('reads arrangement pedal events independently of the source container',()=>{
+ const {p}=engine();p.replacePerformance({...p.piece!,pedals:[{time:0,value:127},{time:3,value:0}]})
+ expect(p.soundEnd(p.piece!.notes[0])).toBe(3)
+})

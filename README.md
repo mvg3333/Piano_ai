@@ -112,6 +112,18 @@ Optional real inference: `.\.venv\Scripts\python.exe -m scripts.benchmark`. This
 
 See [architecture](docs/ARCHITECTURE.md), [verification results](docs/VERIFICATION.md), and [sample attribution](frontend/public/samples/ATTRIBUTION.txt). Data lives in `data/`; back up that directory with the app stopped. Environment overrides: `PIANO_DATA_DIR`, `PIANO_MODEL_PYTHON` (Basic Pitch), `PIANO_CRNN_PYTHON`, `PIANO_CRNN_CHECKPOINT`, `PIANO_NODE`, `PIANO_MAX_BYTES`, `PIANO_MAX_SECONDS`. Setup installs models at the project-local defaults; the CRNN overrides select existing alternative locations at runtime.
 
+## Simplify arrangement
+
+Choose **Simplify arrangement** above the score, then Melody only, Beginner, Easy, or Full transcription. Adjust each hand independently; **Advanced arrangement settings** controls simultaneous notes, stretch, and accompaniment activity. Generate & save creates a separate arrangement, leaving the transcription and corrections intact. Switching to Full transcription restores the effective source, including its existing cleanup and corrections.
+
+The selected arrangement drives sheet music, falling notes, keyboard highlights, synthesized piano, and MIDI/MusicXML exports. The comparison buttons switch between the arrangement and its saved full source at the same position and speed. Original audio and YouTube still contain the full performance. Original pedal events are preserved; hand-demand measurements count key-down notes rather than pedal sustain.
+
+The arrangement dialog shows before/after playing demands, passage review flags, and explanations for note changes. Use **Review a source note** to label melody/accompaniment or correct source hand assignments. Select a passage or use the loop range to protect its detected or manually labeled melody, then inspect the protected note list and save guidance. Protection and role labels guide future arrangements across the piece. Essential/protected melody can exceed the chosen limits; those passages are flagged.
+
+Source edits never silently rewrite saved arrangements. A source-changed label offers **Refresh as new version**; older versions and their original comparison snapshots remain available. Your selected version is remembered in this browser. Generation and saved arrangements require the local server.
+
+Retained melody pitches, attacks, and releases stay exact. Replacement accompaniment uses source attacks and may change octaves or release earlier, with each change explained. General rhythmic simplification is deferred. Melody extraction and harmony remain musical estimates: review competing voices, voice crossings, ornaments that might be part of the theme, and large jumps. A lower note count does not establish musical correctness or comfortable fingering.
+
 ## Limitations
 
 - Solo piano is the target. Accompaniment, reverb, and pedal can merge or miss notes. No accuracy percentage is claimed.

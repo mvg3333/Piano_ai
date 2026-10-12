@@ -3,6 +3,8 @@ test('YouTube adapter uses supported rates, one clock and a visible player',asyn
  const piece=await (await request.get('/demo.json')).json()
  piece.source={kind:'youtube',videoId:'5U-WL0QvKCg'};piece.clipStart=5
  await page.route('**/demo.json',route=>route.fulfill({json:piece}))
+ // Online startup restores the saved demo as well as loading its offline copy.
+ await page.route('**/api/pieces/demo',route=>route.fulfill({json:piece}))
  await page.addInitScript(()=>{
   class Player {
    position=5;start=performance.now();speed=1;state=2;events:any

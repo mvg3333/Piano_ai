@@ -25,6 +25,8 @@ async def lifespan(app):
     yield
 
 app = FastAPI(title='Piano AI', version='1.0.0', lifespan=lifespan)
+from .arrangement_api import router as arrangement_router
+app.include_router(arrangement_router)
 
 class YouTubeInput(BaseModel):
     url: str
@@ -181,8 +183,11 @@ def retranscribe(piece_id: str, request: TranscriptionInput):
     return store.job_get(job_id)
 
 @app.get('/api/pieces/{piece_id}/export/{format}')
-def export(piece_id: str, format: str):
+def export(piece_id: str, format: str, arrangementId: str | None = None):
     piece = get_piece(piece_id)
+    if arrangementId:
+        from .arrangement_api import read_arrangement
+        piece = read_arrangement(piece_id, arrangementId)['performance']
     if format == 'midi':
         return Response(write_midi(piece), media_type='audio/midi', headers={'Content-Disposition':'attachment; filename="piano-ai.mid"'})
     if format == 'musicxml':

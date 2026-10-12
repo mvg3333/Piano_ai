@@ -1,8 +1,13 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "git.openRepositoryInParentFolders": "never",
+    "git.ignoredRepositories": [
+      "C:\\projects\\MyPythonProjects"
+    ]
+  }
 }

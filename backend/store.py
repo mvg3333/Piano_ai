@@ -28,7 +28,14 @@ def setup():
           payload TEXT NOT NULL, error TEXT, piece_id TEXT, cancel INTEGER NOT NULL DEFAULT 0, created REAL NOT NULL,
           updated REAL NOT NULL, heartbeat REAL);
         CREATE TABLE IF NOT EXISTS pending_piece_deletions(id TEXT PRIMARY KEY);
-        PRAGMA user_version=2;
+        CREATE TABLE IF NOT EXISTS arrangement_sources(
+          id TEXT PRIMARY KEY, piece_id TEXT NOT NULL REFERENCES pieces(id) ON DELETE CASCADE,
+          fingerprint TEXT NOT NULL, payload TEXT NOT NULL, UNIQUE(piece_id,fingerprint));
+        CREATE TABLE IF NOT EXISTS arrangements(
+          id TEXT PRIMARY KEY, piece_id TEXT NOT NULL REFERENCES pieces(id) ON DELETE CASCADE,
+          source_id TEXT NOT NULL REFERENCES arrangement_sources(id), payload TEXT NOT NULL, created REAL NOT NULL);
+        CREATE INDEX IF NOT EXISTS arrangements_piece ON arrangements(piece_id,created);
+        PRAGMA user_version=3;
         ''')
 
 def uid():

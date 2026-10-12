@@ -52,13 +52,13 @@ def write_midi(piece):
         channel = n.get('channel', 0 if n['hand']=='right' else 1)
         events.extend([(round(n['start']*1920), 1, mido.Message('note_on', channel=channel, note=n['pitch'], velocity=max(1, n.get('velocity') or 80))),
                        (round(n['end']*1920), 0, mido.Message('note_off', channel=channel, note=n['pitch'], velocity=0))])
-    for p in piece['raw'].get('pedals', []):
+    for p in piece.get('pedals', piece.get('raw', {}).get('pedals', [])):
         events.append((round(p['time']*1920), 0, mido.Message('control_change', channel=p.get('channel',0), control=64, value=p['value'])))
     last = 0
     for tick, _, event in sorted(events, key=lambda e: (e[0], e[1])):
         track.append(event.copy(time=max(0, tick-last)))
         last = tick
-    track.append(mido.MetaMessage('end_of_track', time=0))
+    track.append(mido.MetaMessage('end_of_track', time=max(0, round(piece.get('duration', 0)*1920)-last)))
     buffer = io.BytesIO()
     midi.save(file=buffer)
     return buffer.getvalue()

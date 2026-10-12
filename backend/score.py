@@ -8,8 +8,8 @@ from .domain import tempo_map, seconds_to_beats, beats_to_seconds
 COLORS = {'left': '#0d9488', 'right': '#b453d0'}
 GRIDS = {'1/4': 1, '1/8': .5, '1/16': .25, '1/32': .125, '1/8T': 1/3, '1/16T': 1/6}
 
-def build_score(notes, settings, raw, total):
-    anchors = tempo_map(settings, raw)
+def build_score(notes, settings, raw, total, timeline=None):
+    anchors = timeline['anchors'] if timeline else tempo_map(settings, raw)
     grid = GRIDS[settings['quantization']]
     bar = settings['numerator'] * 4 / settings['denominator']
     first_downbeat = seconds_to_beats(settings['downbeat'], anchors)
@@ -35,6 +35,8 @@ def build_score(notes, settings, raw, total):
     measures = [{'index': i, 'number': i if pickup else i+1, 'startBeat': boundaries[i],
                  'endBeat': boundaries[i+1], 'startTime': beats_to_seconds(boundaries[i], anchors)}
                 for i in range(len(boundaries)-1)]
+    if timeline and timeline.get('measures'):
+        measures = [dict(m) for m in timeline['measures']]
     for hand in ('right', 'left'):
         part = stream.PartStaff(id=hand)
         part.partName = 'Right hand (estimated)' if hand == 'right' else 'Left hand (estimated)'
@@ -100,6 +102,19 @@ def build_score(notes, settings, raw, total):
     from music21.layout import StaffGroup
     score.insert(0, StaffGroup(list(score.parts), symbol='brace', barTogether=True))
     document = ET.fromstring(GeneralObjectExporter(score).parse())
+    # music21 invents random part/instrument IDs. Canonicalize references so
+    # identical source/settings produce identical saved arrangement artifacts.
+    identifiers = {}
+    for i, element in enumerate(document.findall('./part-list/score-part'), 1):
+        identifiers[element.get('id')] = f'P{i}'
+    for i, element in enumerate(document.findall('.//score-instrument'), 1):
+        identifiers[element.get('id')] = f'I{i}'
+    for element in document.iter():
+        if element.get('id') in identifiers:
+            element.set('id', identifiers[element.get('id')])
+    for encoding in document.findall('./identification/encoding'):
+        for date in encoding.findall('encoding-date'):
+            encoding.remove(date)
     # music21 copies an event ID when an irregular duration (e.g. 5/16)
     # is engraved as several tied notes. MusicXML requires unique xs:ID values.
     used = {n.get('id') for n in document.findall('.//note[@id]')}

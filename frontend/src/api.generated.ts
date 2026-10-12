@@ -4,6 +4,59 @@
  */
 
 export interface paths {
+    "/api/pieces/{piece_id}/arrangements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Arrangements List */
+        get: operations["arrangements_list_api_pieces__piece_id__arrangements_get"];
+        put?: never;
+        /** Arrangement Create */
+        post: operations["arrangement_create_api_pieces__piece_id__arrangements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pieces/{piece_id}/arrangements/{arrangement_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Arrangement Read */
+        get: operations["arrangement_read_api_pieces__piece_id__arrangements__arrangement_id__get"];
+        put?: never;
+        post?: never;
+        /** Arrangement Delete */
+        delete: operations["arrangement_delete_api_pieces__piece_id__arrangements__arrangement_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pieces/{piece_id}/guidance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Guidance Update */
+        put: operations["guidance_update_api_pieces__piece_id__guidance_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -231,15 +284,73 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ArrangementInput */
+        ArrangementInput: {
+            settings: components["schemas"]["ArrangementSettings"];
+            /** Expectedsourcefingerprint */
+            expectedSourceFingerprint: string;
+            /** Predecessorid */
+            predecessorId?: string | null;
+            /**
+             * Name
+             * @default Simplified arrangement
+             */
+            name: string;
+        };
+        /** ArrangementSettings */
+        ArrangementSettings: {
+            left?: components["schemas"]["HandSettings"];
+            right?: components["schemas"]["HandSettings"];
+        };
         /** Body_upload_api_sources_upload_post */
         Body_upload_api_sources_upload_post: {
             /** File */
             file: string;
         };
+        /** Guidance */
+        Guidance: {
+            /** Roles */
+            roles?: {
+                [key: string]: "melody" | "accompaniment";
+            };
+            /** Protectednoteids */
+            protectedNoteIds?: string[];
+        };
+        /** GuidanceInput */
+        GuidanceInput: {
+            guidance: components["schemas"]["Guidance"];
+            /** Expectedsourcefingerprint */
+            expectedSourceFingerprint: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HandSettings */
+        HandSettings: {
+            /**
+             * Level
+             * @default beginner
+             * @enum {string}
+             */
+            level: "melody" | "beginner" | "easy" | "full";
+            /**
+             * Maxnotes
+             * @default 1
+             */
+            maxNotes: number;
+            /**
+             * Maxspan
+             * @default 7
+             */
+            maxSpan: number;
+            /**
+             * Activity
+             * @default changes
+             * @enum {string}
+             */
+            activity: "none" | "changes" | "light";
         };
         /** JobInput */
         JobInput: {
@@ -356,6 +467,171 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    arrangements_list_api_pieces__piece_id__arrangements_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                piece_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    arrangement_create_api_pieces__piece_id__arrangements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                piece_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArrangementInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    arrangement_read_api_pieces__piece_id__arrangements__arrangement_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                piece_id: string;
+                arrangement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    arrangement_delete_api_pieces__piece_id__arrangements__arrangement_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                piece_id: string;
+                arrangement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guidance_update_api_pieces__piece_id__guidance_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                piece_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuidanceInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_health_get: {
         parameters: {
             query?: never;
@@ -565,7 +841,9 @@ export interface operations {
     };
     export_api_pieces__piece_id__export__format__get: {
         parameters: {
-            query?: never;
+            query?: {
+                arrangementId?: string | null;
+            };
             header?: never;
             path: {
                 piece_id: string;

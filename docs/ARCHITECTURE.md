@@ -51,8 +51,18 @@ Basic Pitch is distributed under Apache-2.0, with its packaged pretrained ICASSP
 
 ## Data and boundaries
 
-`data/piano.sqlite3` holds pieces, sources, jobs, revision history, and pending file deletions. Source uploads, job logs, immutable raw JSON, and normalized source audio are stored under UUID paths. Back up the entire `data` directory while the server/worker are stopped. Schema version 2 adds the file-deletion queue automatically at startup, preserving existing library data.
+`data/piano.sqlite3` holds pieces, sources, jobs, revision history, pending file deletions, arrangement source snapshots, and arrangements. Source uploads, job logs, immutable raw JSON, and normalized source audio are stored under UUID paths. Back up the entire `data` directory while the server/worker are stopped. Schema version 3 adds arrangement tables and an index automatically at startup, preserving version 2 library data and its file-deletion queue.
 
 The backend serves the built app on one origin. There is no authentication in this single-user LAN version; do not expose it to the public internet. File uploads have a 500 MiB / 60-minute default limit. yt-dlp accepts only normalized, validated YouTube video links, ignores local downloader configuration and plugins, and does not use cookies or authentication workarounds.
 
 The PWA cache contains the app shell, hashed build assets, original demo, and local piano samples. It deliberately excludes all API/media routes. Saved user pieces and uploads are not promised offline. A backend outage does not substitute demo notes for a submitted recording.
+
+## Arrangement layer
+
+`backend.arrangement` operates on effective source notes after corrections, cleanup, and hand assignment. It uses a bounded continuity beam, durations, register, repeated interval/rhythm cells, accents, and duration-weighted local harmony. Harmonic hysteresis prevents accompaniment steps from automatically becoming chord changes. Melody remains in source seconds; accompaniment reductions, octave revoicing, and earlier releases have explicit explanations and source-note links. Simultaneous-note/span measurements use half-open key-down intervals, excluding pedal sustain. Heuristic ambiguity flags are not calibrated confidence probabilities.
+
+Generation uses a musical-content fingerprint and commits its source snapshot and arrangement in one transaction after rechecking the source. Titles are excluded from the fingerprint. Snapshots include effective notes, edits, shared guidance, score settings, anchors/measures, pedal events, recording offset, and duration. Regeneration creates a new arrangement with a predecessor ID. Piece deletion removes arrangements before their snapshots; generation cannot resurrect deleted pieces. Source changes mark existing arrangements outdated without modifying their notes or comparison baselines.
+
+The `/api/pieces/{id}/arrangements` collection supports generation/listing, with read/delete on individual IDs. `PUT /api/pieces/{id}/guidance` saves version-checked melody/accompaniment labels and protected source IDs. Export routes accept `arrangementId`; omitted IDs retain the existing full-transcription behavior. Invalid fingerprints return 409, and generation/engraving failure commits nothing.
+
+Frontend `PerformanceView` is shared by the sampler, score, and roll/keyboard. A/B comparison swaps the selected arrangement and its frozen source view without resetting speed, position, loop, hand selection, or transpose, and flushes scheduled voices. Pedals belong to that view. MusicXML reuses source measure boundaries and canonical part/instrument IDs. MIDI retains the source-duration end-of-track silence. Corrections made from arrangement notes target source IDs, not transformed pitches. Late API responses from another piece cannot select its arrangement.

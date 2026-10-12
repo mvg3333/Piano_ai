@@ -1,5 +1,5 @@
 import { beatsToSeconds, secondsToBeats, advanceLoop } from './timing'
-import type { Piece, Note, Mode } from './types'
+import type { PerformanceView, Piece, Note, Mode } from './types'
 
 export interface ExternalClock { currentTime():number; play():void|Promise<void>; pause():void; seek(t:number):void; rate(r:number):void; isPlaying():boolean }
 type Voice = {source:AudioBufferSourceNode; gain:GainNode; end:number}
@@ -10,7 +10,7 @@ export class Playback {
   buffers=new Map<number,AudioBuffer>()
   voices=new Map<string,Voice>()
   pending=new Set<string>()
-  piece?:Piece
+  piece?:PerformanceView
   mode:Mode='synth'
   external?:ExternalClock
   playing=false
@@ -49,7 +49,16 @@ export class Playback {
     }
     return this.loadingPromise
   }
-  setPiece(piece:Piece) {this.pause();this.piece=piece;this.position=0;this.loopA=0;this.loopB=piece.duration;this.loop=false;this.onChange()}
+  setPiece(piece:PerformanceView) {this.pause();this.piece=piece;this.position=0;this.loopA=0;this.loopB=piece.duration;this.loop=false;this.onChange()}
+  replacePerformance(piece:PerformanceView, synth=false) {
+    const now=this.time(),wasPlaying=this.playing
+    this.flush();this.piece=piece
+    if(synth){this.external?.pause();this.external=undefined;this.mode='synth'}
+    this.position=Math.min(now,piece.duration);this.anchorPosition=this.position;this.anchorTime=this.context?.currentTime??0
+    this.lastBeat=-Infinity
+    if(wasPlaying)this.tick()
+    this.onChange()
+  }
   configureMode(mode:Mode,external?:ExternalClock) {this.pause();this.mode=mode;this.external=external;this.external?.seek(this.position+this.offset)}
   followExternal(playing:boolean) {
     if(this.mode==='synth'||this.countEnd)return
@@ -124,7 +133,7 @@ export class Playback {
     const key=`click-${when}`;this.voices.set(key,{source:osc as unknown as AudioBufferSourceNode,gain,end:when+.06})
   }
   soundEnd(n:Note) {
-    const events=this.piece?.raw.pedals.filter(p=>p.channel===(n.channel??0))??[]
+    const events=(this.piece?.pedals??(this.piece as Piece|undefined)?.raw?.pedals??[]).filter(p=>(p.channel??0)===(n.channel??0))
     const down=events.findLast(p=>p.time<=n.end)
     if(!down||down.value<64)return n.end
     const up=events.find(p=>p.time>n.end&&p.value<64)
