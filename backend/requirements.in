@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+pydantic
+music21==9.7.1
+mido
+numpy==1.26.4
+librosa==0.10.2.post1
+soundfile
+yt-dlp[default]
+psutil
+pytest
+httpx
+lxml==6.1.3

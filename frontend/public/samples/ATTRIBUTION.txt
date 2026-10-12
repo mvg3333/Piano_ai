@@ -1,0 +1,7 @@
+Piano AI uses C1-C7 piano MP3 samples from tonejs-instruments.
+Samples edited by Nicholaus P. Brosowsky, licensed CC BY 3.0.
+https://github.com/nbrosowsky/tonejs-instruments
+https://creativecommons.org/licenses/by/3.0/
+Original sample source information is included in SOURCES.txt.
+Files are unmodified; the app pitch-shifts them during playback.
+LICENSE.md covers the upstream helper code (MIT), not the sample license.

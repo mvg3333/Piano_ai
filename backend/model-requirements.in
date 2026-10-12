@@ -1,0 +1,5 @@
+basic-pitch==0.4.0
+tensorflow==2.15.0
+numpy==1.26.4
+librosa==0.10.2.post1
+setuptools<81

@@ -1,0 +1,37 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Frontend dependencies and build outputs
+node_modules/
+dist/
+build/
+
+# Local media and generated transcription outputs
+data/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+.tools/
+.venv-model/
+.venv-piano/
+.uv-cache/
+frontend/test-results/
+frontend/playwright-report/
+*.log
+*.tsbuildinfo
+.tools/
+.venv-model/
+.uv-cache/
+frontend/test-results/
+frontend/playwright-report/
+*.log

@@ -1,0 +1,80 @@
+import {test,expect} from '@playwright/test'
+import {execFileSync} from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
+
+test('library options target one piece and deletion requires confirmation',async({page,request})=>{
+ test.setTimeout(90000)
+ const root=path.resolve('..')
+ const piece=JSON.parse(fs.readFileSync('public/demo.json','utf8'))
+ piece.id='library-actions-test'
+ piece.title='Andrea Vanzo - Song Of Storms (from The Legend of Zelda: Ocarina of Time) - Library test'
+ piece.raw.provenance.kind='transcription'
+ piece.noteEvidence=Object.fromEntries(piece.raw.notes.map((n:{id:string},i:number)=>[n.id,{onset:i%3===0?.4:.95}]))
+ const {id,pitch,start,end,hand}=piece.raw.notes[0]
+ piece.edits=[{id,pitch:pitch+1,start,end,hand,deleted:false}]
+ execFileSync(path.join(root,'.venv/Scripts/python.exe'),['-c',
+  "import json,sys; from backend import store; from backend.domain import apply_revision; p=json.load(sys.stdin); store.setup(); p=apply_revision(p,{**p['settings'],'cleanup':'off'},p['edits']); store.piece_save(p); store.piece_save({**p,'id':'library-keep-test','title':'Keep this other piece'})"],
+  {cwd:root,env:{...process.env,PIANO_DATA_DIR:path.join(root,'data/browser-tests')},input:JSON.stringify(piece),timeout:30000})
+ const original=await (await request.get('/api/pieces/'+piece.id)).json()
+ const other=await (await request.get('/api/pieces/library-keep-test')).json()
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message))
+ await page.goto('/')
+ await expect(page.getByRole('heading',{name:'Windowlight',exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'My pieces',exact:true}).click()
+ const row=page.locator(`[data-piece-id="${piece.id}"]`)
+ await expect(row).toBeVisible()
+ for(const [width,height] of [[1280,900],[390,844]]){
+  await page.setViewportSize({width,height})
+  await row.scrollIntoViewIfNeeded()
+  await expect(row.getByRole('button',{name:'Cleanup and regenerate '+piece.title,exact:true})).toBeVisible()
+  await expect(row.getByRole('button',{name:'Delete '+piece.title,exact:true})).toBeVisible()
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+  const dialog=page.getByRole('dialog',{name:'My pieces',exact:true})
+  expect(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true)
+  await page.screenshot({path:`test-results/library-${width}x${height}.png`})
+ }
+ await row.getByRole('button',{name:'Cleanup and regenerate '+piece.title,exact:true}).click()
+ const options=page.getByRole('dialog',{name:'Cleanup and score options',exact:true})
+ await expect(options.getByText(piece.title,{exact:true})).toBeVisible()
+ await options.getByRole('combobox',{name:'Note cleanup'}).selectOption('strong')
+ await options.getByRole('button',{name:'Back to My pieces'}).click()
+ expect((await (await request.get('/api/pieces/'+piece.id)).json()).settings).toEqual(original.settings)
+ await row.getByRole('button',{name:'Cleanup and regenerate '+piece.title,exact:true}).click()
+ await expect(options.getByRole('combobox',{name:'Note cleanup'})).toHaveValue('off')
+ await options.getByRole('combobox',{name:'Note cleanup'}).selectOption('strong')
+ await options.getByRole('spinbutton',{name:'Tempo (BPM)'}).fill('80')
+ await options.getByRole('spinbutton',{name:'Beats per bar'}).fill('3')
+ await options.getByRole('combobox',{name:'Quantization',exact:true}).selectOption('1/8')
+ await options.getByRole('spinbutton',{name:'First downbeat (seconds)'}).fill('0.25')
+ await options.getByRole('button',{name:'Apply & regenerate',exact:true}).click()
+ await expect(options.getByRole('status')).toContainText('Saved changes',{timeout:20000})
+ const saved=await (await request.get('/api/pieces/'+piece.id)).json()
+ expect(saved.settings).toMatchObject({cleanup:'strong',tempo:80,numerator:3,quantization:'1/8',downbeat:.25})
+ expect(saved.notes.length).toBeLessThan(original.notes.length)
+ expect(saved.score.musicxml).toContain('score-partwise')
+ expect(saved.raw).toEqual(original.raw);expect(saved.edits).toEqual(original.edits)
+ expect(await (await request.get('/api/pieces/library-keep-test')).json()).toEqual(other)
+ await expect(page.getByRole('heading',{name:'Windowlight',exact:true})).toBeAttached()
+ await options.getByRole('button',{name:'Back to My pieces'}).click()
+ await row.locator('.library-piece').click()
+ await expect(page.getByRole('heading',{name:piece.title,exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'My pieces',exact:true}).click()
+ await row.getByRole('button',{name:'Delete '+piece.title,exact:true}).click()
+ const confirm=page.getByRole('alertdialog',{name:'Delete piece',exact:true})
+ await expect(confirm.getByText(piece.title,{exact:true})).toBeVisible()
+ await confirm.getByRole('button',{name:'Cancel',exact:true}).click()
+ expect((await request.get('/api/pieces/'+piece.id)).status()).toBe(200)
+ await row.getByRole('button',{name:'Delete '+piece.title,exact:true}).click()
+ await confirm.getByRole('button',{name:'Delete piece',exact:true}).click()
+ await expect(page.getByRole('dialog',{name:'My pieces',exact:true})).toBeVisible()
+ await expect(row).toHaveCount(0)
+ await expect(page.getByRole('heading',{name:'Windowlight',exact:true})).toBeAttached()
+ expect((await request.get('/api/pieces/'+piece.id)).status()).toBe(404)
+ expect(await (await request.get('/api/pieces/library-keep-test')).json()).toEqual(other)
+ await page.reload()
+ await page.getByRole('button',{name:'My pieces',exact:true}).click()
+ await expect(page.locator('[data-piece-id="library-keep-test"]')).toBeVisible()
+ await expect(row).toHaveCount(0)
+ expect(errors).toEqual([])
+})

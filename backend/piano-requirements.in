@@ -1,0 +1,6 @@
+# Windows CPU wheel from the official PyTorch distribution; other packages use PyPI.
+torch @ https://download.pytorch.org/whl/cpu/torch-2.8.0%2Bcpu-cp311-cp311-win_amd64.whl
+piano-transcription-inference==0.0.6
+torchlibrosa==0.1.0
+numpy==1.26.4
+librosa==0.10.2.post1

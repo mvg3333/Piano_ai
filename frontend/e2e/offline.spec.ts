@@ -1,0 +1,16 @@
+import {test,expect} from '@playwright/test'
+test('cached demo remains playable without API or network',async({page,context})=>{
+ await page.goto('/')
+ await expect(page.locator('.score-render svg').first()).toBeVisible()
+ await page.evaluate(()=>navigator.serviceWorker.ready)
+ await page.reload()
+ await expect(page.getByRole('heading',{name:'Windowlight'})).toBeVisible()
+ await context.setOffline(true)
+ await page.reload()
+ await expect(page.getByRole('heading',{name:'Windowlight'})).toBeVisible()
+ await expect(page.locator('.score-render svg').first()).toBeVisible()
+ await page.getByRole('button',{name:'Play',exact:true}).click()
+ await expect(page.getByRole('button',{name:'Pause',exact:true})).toBeVisible()
+ await expect.poll(async()=>+(await page.getByRole('slider',{name:'Playback position'}).inputValue())).toBeGreaterThan(.5)
+ await page.getByRole('button',{name:'Pause',exact:true}).click()
+})
